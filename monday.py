@@ -20,12 +20,8 @@ def sunday_after(dt, offset=1):
     dt += timedelta(days=offset * 7)
 
     # 23:59:59 on next Sunday
-    days = 6 - dt.weekday()
-    hours = 23 - dt.hour
-    mins = 59 - dt.minute
-    sec = 59 - dt.second
-    s = dt + timedelta(days=days, hours=hours, minutes=mins, seconds=sec)
-    s = s.replace(microsecond=0)
+    s = dt + timedelta(days=6 - dt.weekday())
+    s = s.replace(hour=23, minute=59, second=59, microsecond=0)
 
     # Watch out for DST transition
     #s -= s.gmtoff - t.gmtoff
