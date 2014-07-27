@@ -54,7 +54,8 @@ class Week:
 
     @property
     def sunday(self):
-        return sunday_after(self.tweets[0].time)
+        if self.tweets:
+            return sunday_after(self.tweets[0].time)
 
 
 ### formatting the tweets ###
@@ -68,6 +69,8 @@ def entry(tweets, sunday):
 def main():
     w = Week(datetime.now() - timedelta(days=7))
     sunday = w.sunday
+    if not sunday:  # no tweets last week
+        return
     year = '%04d' % sunday.year
     path = os.path.join('tweets', year[:-1] + 'x', year)
     try:
