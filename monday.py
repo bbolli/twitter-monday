@@ -10,6 +10,7 @@ import operator
 import os
 import sys
 
+### date handling ###
 
 def sunday_after(dt, offset=1):
     """offset == 3 means 3rd Sunday from now, -2 means two Sundays back"""
@@ -27,6 +28,8 @@ def sunday_after(dt, offset=1):
     #s -= s.gmtoff - t.gmtoff
     return s
 
+
+### getting a week's worth of tweets ###
 
 class Week:
 
@@ -54,8 +57,13 @@ class Week:
         return sunday_after(self.tweets[0].time)
 
 
+### formatting the tweets ###
+
 def entry(tweets, sunday):
     return "blosxom entry for week ending %s:\n%r" % (sunday, tweets)
+
+
+### main ###
 
 def main():
     w = Week(datetime.now() - timedelta(days=7))
