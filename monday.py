@@ -80,10 +80,10 @@ class Tweet:
         return u'%(time)s %(text)r' % self.__dict__
 
     def _munge(self, text):
-        m = re.match(r'^(.*\()(http:\/\/[^)]*)(\).*$)', text, re.M)
+        m = re.match(r'^(.*\()(http://[^)]*)(\).*$)', text, re.M)
         if m:
             return self._munge(m.group(1)) + self._check_url(m.group(2)) + self._munge(m.group(3))
-        m = re.match(r'^(.*)(http:\/\/\S+)(.*)$', text, re.M)
+        m = re.match(r'^(.*)(http://[!-~]+)(.*)$', text, re.M)
         if m:
             return self._munge(m.group(1)) + self._check_url(m.group(2)) + self._munge(m.group(3))
         return text.replace('&amp;gt;', '&gt;').replace('&amp;lt;', '&lt;')
