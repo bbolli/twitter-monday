@@ -168,11 +168,7 @@ class Week:
             if tweet.time <= latest:
                 self.tweets.append(tweet)
         self.tweets.sort(key=operator.attrgetter('time'))
-
-    @property
-    def sunday(self):
-        if self.tweets:
-            return sunday_after(self.tweets[0].time)
+        self.sunday = sunday_after(self.tweets[0].time) if self.tweets else None
 
 
 ### formatting the tweets ###
