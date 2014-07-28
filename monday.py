@@ -9,6 +9,7 @@ from datetime import datetime, timedelta
 from email.utils import parsedate_tz, mktime_tz
 import errno
 import httplib
+import locale
 import operator
 import os
 import re
@@ -30,6 +31,15 @@ OAUTH_FILENAME = os.environ.get('HOME', os.environ.get('USERPROFILE', '.')) + os
 IGNORE_SOURCES = ('tumblr', 'instagram')
 
 
+# ensure the right date/time format
+try:
+    locale.setlocale(locale.LC_TIME, '')
+except locale.Error:
+    pass
+encoding = locale.getdefaultlocale()[1]
+time_encoding = locale.getlocale(locale.LC_TIME)[1] or encoding
+
+
 ### date handling ###
 
 def sunday_after(dt, offset=1):
@@ -47,6 +57,9 @@ def sunday_after(dt, offset=1):
     # Watch out for DST transition
     #s -= s.gmtoff - t.gmtoff
     return s
+
+def strftime(t, format):
+    return t.strftime(format).decode(time_encoding)
 
 
 ### Tweet class ###
@@ -166,13 +179,13 @@ class Week:
 
 def entry(tweets, sunday):
     e = ["Die Kurzmeldungen letzter Woche",
-        'meta-id: short-%s' % sunday.strftime('%Y-%m-%d'),
+        'meta-id: short-%s' % strftime(sunday, '%Y-%m-%d'),
         'meta-tags: short-form', '', '<dl>'
     ]
     _e = e.append
 
     for i, tweet in enumerate(tweets):
-        _e('<dt id=\'p-%d\'>%s</dt>' % (i + 1, tweet.time.strftime('%A, %H:%M')))
+        _e('<dt id=\'p-%d\'>%s</dt>' % (i + 1, strftime(tweet.time, '%A, %H:%M')))
         _e('<dd>%s' % tweet.text)
         attrib = ''
         if tweet.reply_person:
@@ -201,7 +214,7 @@ def main():
         if e.errno != errno.EEXIST:
             raise
     path = os.path.join(path, '%02d-%02d.txt' % (sunday.month, sunday.day))
-    with codecs.open(path, 'w', 'utf-8') as f:
+    with codecs.open(path, 'w', encoding) as f:
         f.write(entry(w.tweets, sunday))
     print("Wrote", path)
 
