@@ -67,7 +67,7 @@ def strftime(t, format):
 class Tweet:
 
     def __init__(self, d):
-        self.text = self._munge(d['text'])
+        self.text = d['text']
         self.t_id = d['id']
         self.source = d.get('source', '')
         self.reply_person = d.get('in_reply_to_screen_name')
@@ -78,6 +78,9 @@ class Tweet:
 
     def __repr__(self):
         return u'%(time)s %(text)r' % self.__dict__
+
+    def munge(self):
+        self.text = self._munge(self.text)
 
     def _munge(self, text):
         m = re.match(r'^(.*\()(http://[^)]*)(\).*$)', text, re.M)
@@ -167,6 +170,7 @@ class Week:
             if any(i in tweet.source for i in IGNORE_SOURCES):
                 continue
             if tweet.time <= latest:
+                tweet.munge()
                 self.tweets.append(tweet)
         self.tweets.sort(key=operator.attrgetter('time'))
         self.sunday = sunday_after(self.tweets[0].time) if self.tweets else None
