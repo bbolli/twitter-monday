@@ -193,17 +193,16 @@ class Week:
 
 def main():
     w = Week(datetime.now() - timedelta(weeks=1))
-    sunday = w.sunday
-    if not sunday:  # no tweets last week
+    if not w.sunday:  # no tweets last week
         return
-    year = '%04d' % sunday.year
+    year = '%04d' % w.sunday.year
     path = os.path.join('tweets', year[:-1] + 'x', year)
     try:
         os.makedirs(path)
     except OSError as e:
         if e.errno != errno.EEXIST:
             raise
-    path = os.path.join(path, sunday.strftime('short-%Y-%m-%d.txt'))
+    path = os.path.join(path, w.sunday.strftime('short-%Y-%m-%d.txt'))
     with codecs.open(path, 'w', encoding) as f:
         f.write(w.entry())
     print("Wrote", path)
