@@ -191,9 +191,9 @@ class Week:
 
 ### main ###
 
-def main():
-    w = Week(datetime.now() - timedelta(weeks=1))
-    if not w.sunday:  # no tweets last week
+def main(mid_week, touch=False):
+    w = Week(mid_week)
+    if not w.sunday:  # no tweets in this week
         return
     year = '%04d' % w.sunday.year
     path = os.path.join('tweets', year[:-1] + 'x', year)
@@ -205,7 +205,15 @@ def main():
     path = os.path.join(path, w.sunday.strftime('short-%Y-%m-%d.txt'))
     with codecs.open(path, 'w', encoding) as f:
         f.write(w.entry())
+    if touch:
+        mtime = time.mktime(w.sunday.timetuple())
+        os.utime(path, (mtime, mtime))
     print("Wrote", path)
 
 if __name__ == '__main__':
-    main()
+    args = sys.argv[1:]
+    if args:
+        for day in args:
+            main(datetime.strptime(day, '%Y-%m-%d'), True)
+    else:
+        main(datetime.now() - timedelta(weeks=1))
