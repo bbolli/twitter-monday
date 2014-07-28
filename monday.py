@@ -171,10 +171,7 @@ class Week:
         self.sunday = sunday_after(self.tweets[0].time) if self.tweets else None
 
     def entry(self):
-        e = ["Die Kurzmeldungen letzter Woche",
-            'meta-id: short-%s' % strftime(self.sunday, '%Y-%m-%d'),
-            'meta-tags: short-form', '', '<dl>'
-        ]
+        e = ["Die Kurzmeldungen letzter Woche", '', '<dl>']
         _e = e.append
 
         for i, tweet in enumerate(self.tweets):
