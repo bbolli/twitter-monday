@@ -158,8 +158,9 @@ class Week:
         earliest = sunday_after(mid_week, -1)
         twitter = get_twitter_api()
         user = twitter.account.settings(_method='GET')
+        self.screen_name = user['screen_name']
         self.tweets = []
-        for tweet in get_tweets(twitter, screen_name=user['screen_name']):
+        for tweet in get_tweets(twitter, screen_name=self.screen_name):
             tweet = Tweet(tweet)
             if tweet.time <= earliest:
                 break
@@ -183,7 +184,7 @@ class Week:
                 if tweet.reply_tweet:
                     who += '/status/%s' % tweet.reply_tweet
                 attrib = "; Antwort auf <a href='%s'>@%s</a>" % (who, tweet.reply_person)
-            url = 'http://twitter.com/swissbolli/status/%s' % tweet.t_id
+            url = 'http://twitter.com/%s/status/%s' % (self.screen_name, tweet.t_id)
             _e('[<a href=\'%s\'>Original</a>%s]</dd>' % (url, attrib))
         _e('</dl>')
         return '\n'.join(e) + '\n'
