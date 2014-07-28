@@ -170,29 +170,26 @@ class Week:
         self.tweets.sort(key=operator.attrgetter('time'))
         self.sunday = sunday_after(self.tweets[0].time) if self.tweets else None
 
+    def entry(self):
+        e = ["Die Kurzmeldungen letzter Woche",
+            'meta-id: short-%s' % strftime(self.sunday, '%Y-%m-%d'),
+            'meta-tags: short-form', '', '<dl>'
+        ]
+        _e = e.append
 
-### formatting the tweets ###
-
-def entry(tweets, sunday):
-    e = ["Die Kurzmeldungen letzter Woche",
-        'meta-id: short-%s' % strftime(sunday, '%Y-%m-%d'),
-        'meta-tags: short-form', '', '<dl>'
-    ]
-    _e = e.append
-
-    for i, tweet in enumerate(tweets):
-        _e('<dt id=\'p-%d\'>%s</dt>' % (i + 1, strftime(tweet.time, '%A, %H:%M')))
-        _e('<dd>%s' % tweet.text)
-        attrib = ''
-        if tweet.reply_person:
-            who = 'http://twitter.com/%s' % tweet.reply_person
-            if tweet.reply_tweet:
-                who += '/status/%s' % tweet.reply_tweet
-            attrib = "; Antwort auf <a href='%s'>@%s</a>" % (who, tweet.reply_person)
-        url = 'http://twitter.com/swissbolli/status/%s' % tweet.t_id
-        _e('[<a href=\'%s\'>Original</a>%s]</dd>' % (url, attrib))
-    _e('</dl>')
-    return '\n'.join(e)
+        for i, tweet in enumerate(self.tweets):
+            _e('<dt id=\'p-%d\'>%s</dt>' % (i + 1, strftime(tweet.time, '%A, %H:%M')))
+            _e('<dd>%s' % tweet.text)
+            attrib = ''
+            if tweet.reply_person:
+                who = 'http://twitter.com/%s' % tweet.reply_person
+                if tweet.reply_tweet:
+                    who += '/status/%s' % tweet.reply_tweet
+                attrib = "; Antwort auf <a href='%s'>@%s</a>" % (who, tweet.reply_person)
+            url = 'http://twitter.com/swissbolli/status/%s' % tweet.t_id
+            _e('[<a href=\'%s\'>Original</a>%s]</dd>' % (url, attrib))
+        _e('</dl>')
+        return '\n'.join(e) + '\n'
 
 
 ### main ###
@@ -211,7 +208,7 @@ def main():
             raise
     path = os.path.join(path, '%02d-%02d.txt' % (sunday.month, sunday.day))
     with codecs.open(path, 'w', encoding) as f:
-        f.write(entry(w.tweets, sunday))
+        f.write(w.entry())
     print("Wrote", path)
 
 if __name__ == '__main__':
