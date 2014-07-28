@@ -4,6 +4,7 @@
 
 from __future__ import print_function
 
+import codecs
 from datetime import datetime, timedelta
 from email.utils import parsedate_tz, mktime_tz
 import errno
@@ -157,9 +158,25 @@ class Week:
 ### formatting the tweets ###
 
 def entry(tweets, sunday):
-    return u"Tweets for the week ending %s:\n\n%s\n" % (sunday,
-        '\n'.join(repr(t) for t in tweets)
-    )
+    e = ["Die Kurzmeldungen letzter Woche",
+        'meta-id: short-%s' % sunday.strftime('%Y-%m-%d'),
+        'meta-tags: short-form', '', '<dl>'
+    ]
+    _e = e.append
+
+    for i, tweet in enumerate(tweets):
+        _e('<dt id=\'p-%d\'>%s</dt>' % (i + 1, tweet.time.strftime('%A, %H:%M')))
+        _e('<dd>%s' % tweet.text)
+        attrib = ''
+        if tweet.reply_person:
+            who = 'http://twitter.com/%s' % tweet.reply_person
+            if tweet.reply_tweet:
+                who += '/status/%s' % tweet.reply_tweet
+            attrib = "; Antwort auf <a href='%s'>@%s</a>" % (who, tweet.reply_person)
+        url = 'http://twitter.com/swissbolli/status/%s' % tweet.t_id
+        _e('[<a href=\'%s\'>Original</a>%s]</dd>' % (url, attrib))
+    _e('</dl>')
+    return '\n'.join(e)
 
 
 ### main ###
@@ -177,7 +194,7 @@ def main():
         if e.errno != errno.EEXIST:
             raise
     path = os.path.join(path, '%02d-%02d.txt' % (sunday.month, sunday.day))
-    with open(path, 'w') as f:
+    with codecs.open(path, 'w', 'utf-8') as f:
         f.write(entry(w.tweets, sunday))
     print("Wrote", path)
 
