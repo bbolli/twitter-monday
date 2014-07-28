@@ -41,6 +41,23 @@ def sunday_after(dt, offset=1):
     return s
 
 
+### Tweet class ###
+
+class Tweet:
+
+    def __init__(self, d):
+        self.text = d['text']
+        self.t_id = d['id']
+        self.reply_person = d.get('in_reply_to_screen_name')
+        self.reply_tweet = d.get('in_reply_to_status_id')
+        self.time = datetime.fromtimestamp(
+            mktime_tz(parsedate_tz(d['created_at']))
+        )
+
+    def __repr__(self):
+        return u'%(time)s %(text)r' % self.__dict__
+
+
 ### Twitter API ###
 
 def get_twitter_api():
@@ -92,25 +109,25 @@ class Week:
         user = twitter.account.settings(_method='GET')
         self.tweets = []
         for tweet in get_tweets(twitter, screen_name=user['screen_name']):
-            tm = tweet['_time'] = datetime.fromtimestamp(
-                mktime_tz(parsedate_tz(tweet['created_at']))
-            )
-            if tm <= earliest:
+            tweet = Tweet(tweet)
+            if tweet.time <= earliest:
                 break
-            if tm <= latest:
+            if tweet.time <= latest:
                 self.tweets.append(tweet)
-        self.tweets.sort(key=operator.itemgetter('_time'))
+        self.tweets.sort(key=operator.attrgetter('time'))
 
     @property
     def sunday(self):
         if self.tweets:
-            return sunday_after(self.tweets[0]['_time'])
+            return sunday_after(self.tweets[0].time)
 
 
 ### formatting the tweets ###
 
 def entry(tweets, sunday):
-    return "blosxom entry for week ending %s:\n%r" % (sunday, tweets)
+    return u"Tweets for the week ending %s:\n\n%s\n" % (sunday,
+        '\n'.join(repr(t) for t in tweets)
+    )
 
 
 ### main ###
