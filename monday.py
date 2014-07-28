@@ -48,7 +48,7 @@ def sunday_after(dt, offset=1):
         raise ArgumentError("offset must be nonzero")
     if offset > 0:
         offset -= 1
-    dt += timedelta(days=offset * 7)
+    dt += timedelta(weeks=offset)
 
     # 23:59:59 on next Sunday
     s = dt + timedelta(days=6 - dt.weekday())
@@ -192,7 +192,7 @@ class Week:
 ### main ###
 
 def main():
-    w = Week(datetime.now() - timedelta(days=7))
+    w = Week(datetime.now() - timedelta(weeks=1))
     sunday = w.sunday
     if not sunday:  # no tweets last week
         return
