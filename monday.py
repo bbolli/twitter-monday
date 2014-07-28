@@ -203,7 +203,7 @@ def main():
     except OSError as e:
         if e.errno != errno.EEXIST:
             raise
-    path = os.path.join(path, '%02d-%02d.txt' % (sunday.month, sunday.day))
+    path = os.path.join(path, sunday.strftime('short-%Y-%m-%d.txt'))
     with codecs.open(path, 'w', encoding) as f:
         f.write(w.entry())
     print("Wrote", path)
