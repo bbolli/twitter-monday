@@ -26,6 +26,10 @@ CONSUMER_KEY = '2fLClfUjnO720IiTSZXwxiQM6'
 CONSUMER_SECRET = 'uHLl38PJy1clObRCWHkjRy3nP3h0km7LLTXSiXMRF9ExBUjBVF'
 OAUTH_FILENAME = os.environ.get('HOME', os.environ.get('USERPROFILE', '.')) + os.sep + '.twitter_monday_oauth'
 
+# ignore tweets originating from these sources
+IGNORE_SOURCES = ('tumblr', 'instagram')
+
+
 ### date handling ###
 
 def sunday_after(dt, offset=1):
@@ -52,6 +56,7 @@ class Tweet:
     def __init__(self, d):
         self.text = self._munge(d['text'])
         self.t_id = d['id']
+        self.source = d.get('source', '')
         self.reply_person = d.get('in_reply_to_screen_name')
         self.reply_tweet = d.get('in_reply_to_status_id')
         self.time = datetime.fromtimestamp(
@@ -145,6 +150,8 @@ class Week:
             tweet = Tweet(tweet)
             if tweet.time <= earliest:
                 break
+            if any(i in tweet.source for i in IGNORE_SOURCES):
+                continue
             if tweet.time <= latest:
                 self.tweets.append(tweet)
         self.tweets.sort(key=operator.attrgetter('time'))
