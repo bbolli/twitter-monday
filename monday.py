@@ -7,10 +7,13 @@ from __future__ import print_function
 from datetime import datetime, timedelta
 from email.utils import parsedate_tz, mktime_tz
 import errno
+import httplib
 import operator
 import os
+import re
 import sys
 import time
+import urlparse
 
 from twitter.api import Twitter, TwitterError
 from twitter.oauth import OAuth, write_token_file, read_token_file
@@ -46,7 +49,7 @@ def sunday_after(dt, offset=1):
 class Tweet:
 
     def __init__(self, d):
-        self.text = d['text']
+        self.text = self._munge(d['text'])
         self.t_id = d['id']
         self.reply_person = d.get('in_reply_to_screen_name')
         self.reply_tweet = d.get('in_reply_to_status_id')
@@ -56,6 +59,35 @@ class Tweet:
 
     def __repr__(self):
         return u'%(time)s %(text)r' % self.__dict__
+
+    def _munge(self, text):
+        m = re.match(r'^(.*\()(http:\/\/[^)]*)(\).*$)', text, re.M)
+        if m:
+            return self._munge(m.group(1)) + self._check_url(m.group(2)) + self._munge(m.group(3))
+        m = re.match(r'^(.*)(http:\/\/\S+)(.*)$', text, re.M)
+        if m:
+            return self._munge(m.group(1)) + self._check_url(m.group(2)) + self._munge(m.group(3))
+        return text.replace('&amp;gt;', '&gt;').replace('&amp;lt;', '&lt;')
+
+    def _check_url(self, u):
+        trailer = ''
+        m = re.match(r'([,\)])$', u)
+        if m:
+            trailer = m.group()
+            u = u[:-1]
+        try:
+            url = urlparse.urlsplit(u)
+            conn = httplib.HTTPConnection(url.netloc)
+            path = url.path + ('?' + url.query if url.query else '')
+            conn.request('HEAD', path)
+            resp = conn.getresponse()
+            if resp.status in (301, 302, 303) and resp.getheader('Location'):
+                u = resp.getheader('Location').replace('&', '&amp;')
+        except Exception as e:
+            print("Blew up on %s: %s" % (u, e), file=sys.stderr)
+        m = re.match(r'http://(.*)', u)
+        label = m.group(1) if m else u
+        return '<a href="%s">%s</a>%s' % (u, label, trailer)
 
 
 ### Twitter API ###
