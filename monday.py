@@ -114,41 +114,45 @@ class Tweet:
 
 ### Twitter API ###
 
-def get_twitter_api():
-    """If the user is not authorized yet, do the OAuth dance and save the
-    credentials in her home folder for future incovations.
-    Then read the credentials and return the authorized Twitter API object."""
-    if not os.path.exists(OAUTH_FILENAME):
-        oauth_dance("@swissbolli's Monday Twitter Backup",
-            CONSUMER_KEY, CONSUMER_SECRET, OAUTH_FILENAME
-        )
-    oauth_token, oauth_token_secret = read_token_file(OAUTH_FILENAME)
-    return Twitter(
-        auth=OAuth(oauth_token, oauth_token_secret, CONSUMER_KEY, CONSUMER_SECRET),
-        domain='api.twitter.com'
-    )
+class TwitterApi:
 
-def get_tweets(twitter, **args):
-    """Read tweets from the authenticated user's timeline one at a time,
-    starting with the most recent one."""
-    kwargs = {'count': 500}
-    kwargs.update(args)
-    exc_count = 0
-    while True:
-        try:
-            tweets = twitter.statuses.user_timeline(**kwargs)
-        except TwitterError as e:
-            print(e, file=sys.stderr)
-            exc_count += 1
-            if exc_count >= 10:
+    def __init__(self):
+        """If the user is not authorized yet, do the OAuth dance and save the
+        credentials in her home folder for future incovations.
+        Then read the credentials and return the authorized Twitter API object."""
+        if not os.path.exists(OAUTH_FILENAME):
+            oauth_dance("@swissbolli's Monday Twitter Backup",
+                CONSUMER_KEY, CONSUMER_SECRET, OAUTH_FILENAME
+            )
+        oauth_token, oauth_token_secret = read_token_file(OAUTH_FILENAME)
+        self.api = Twitter(
+            auth=OAuth(oauth_token, oauth_token_secret, CONSUMER_KEY, CONSUMER_SECRET),
+            domain='api.twitter.com'
+        )
+        user = self.api.account.settings(_method='GET')
+        self.screen_name = user['screen_name']
+
+    def get_tweets(self, **args):
+        """Read tweets from the authenticated user's timeline one at a time,
+        starting with the most recent one."""
+        kwargs = {'count': 500, 'screen_name': self.screen_name}
+        kwargs.update(args)
+        exc_count = 0
+        while True:
+            try:
+                tweets = self.api.statuses.user_timeline(**kwargs)
+            except TwitterError as e:
+                print(e, file=sys.stderr)
+                exc_count += 1
+                if exc_count >= 10:
+                    break
+                time.sleep(3)
+                continue
+            if not tweets:
                 break
-            time.sleep(3)
-            continue
-        if not tweets:
-            break
-        for tweet in tweets:
-            yield tweet
-            kwargs['max_id'] = tweet['id'] - 1
+            for tweet in tweets:
+                yield tweet
+                kwargs['max_id'] = tweet['id'] - 1
 
 
 ### getting a week's worth of tweets ###
@@ -159,11 +163,10 @@ class Week:
     def __init__(self, mid_week):
         latest = sunday_after(mid_week, 1)
         earliest = sunday_after(mid_week, -1)
-        twitter = get_twitter_api()
-        user = twitter.account.settings(_method='GET')
-        self.screen_name = user['screen_name']
+        twitter = TwitterApi()
+        self.screen_name = twitter.screen_name
         self.tweets = []
-        for tweet in get_tweets(twitter, screen_name=self.screen_name):
+        for tweet in twitter.get_tweets():
             tweet = Tweet(tweet)
             if tweet.time <= earliest:
                 break
