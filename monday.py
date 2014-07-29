@@ -200,8 +200,7 @@ def main(mid_week, touch=False):
     w = Week(mid_week)
     if not w.sunday:  # no tweets in this week
         return
-    year = '%04d' % w.sunday.year
-    path = os.path.join('tweets', year[:-1] + 'x', year)
+    path = os.path.join('tweets', w.sunday.strftime('%Y'))
     try:
         os.makedirs(path)
     except OSError as e:
