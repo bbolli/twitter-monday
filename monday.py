@@ -160,10 +160,9 @@ class TwitterApi:
 class Week:
 
     # Monday-to-Sunday week of tweets around mid_week
-    def __init__(self, mid_week):
+    def __init__(self, mid_week, twitter):
         latest = sunday_after(mid_week, 1)
         earliest = sunday_after(mid_week, -1)
-        twitter = TwitterApi()
         self.screen_name = twitter.screen_name
         self.tweets = []
         for tweet in twitter.get_tweets():
@@ -200,7 +199,7 @@ class Week:
 ### main ###
 
 def main(mid_week, touch=False):
-    w = Week(mid_week)
+    w = Week(mid_week, TwitterApi())
     if not w.sunday:  # no tweets in this week
         return
     path = os.path.join('tweets', w.sunday.strftime('%Y'))
