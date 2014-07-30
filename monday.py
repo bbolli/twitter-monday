@@ -40,8 +40,6 @@ encoding = locale.getdefaultlocale()[1]
 time_encoding = locale.getlocale(locale.LC_TIME)[1] or encoding
 
 
-### date handling ###
-
 def sunday_after(dt, offset=1):
     """offset == 3 means 3rd Sunday from now, -2 means two Sundays back"""
     if offset == 0:
@@ -61,8 +59,6 @@ def sunday_after(dt, offset=1):
 def strftime(t, format):
     return t.strftime(format).decode(time_encoding)
 
-
-### Tweet class ###
 
 class Tweet:
 
@@ -112,8 +108,6 @@ class Tweet:
         return '<a href="%s">%s</a>%s' % (u, label, trailer)
 
 
-### Twitter API ###
-
 class TwitterApi:
 
     def __init__(self):
@@ -155,8 +149,6 @@ class TwitterApi:
                 kwargs['max_id'] = tweet['id'] - 1
 
 
-### getting a week's worth of tweets ###
-
 class Week:
 
     # Monday-to-Sunday week of tweets around mid_week
@@ -195,8 +187,6 @@ class Week:
         _e('</dl>')
         return '\n'.join(e) + '\n'
 
-
-### main ###
 
 def main(mid_week, touch=False):
     w = Week(mid_week, TwitterApi())
