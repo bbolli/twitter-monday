@@ -17,6 +17,16 @@ access to your Twitter account. The resulting OAuth credentials are stored in
 your home folder as `.twitter_monday_oauth`. Your Twitter password is not
 saved.
 
+## twitter-complete
+
+`python complete.py`
+
+`complete.py` creates a complete backup of your tweets, as far as they are
+returned by the Twitter API.
+
+The output is a file called `all-tweets.json`. It contains the tweets in their
+original JSON format.
+
 ## Dependencies
 
 These tools require the Twitter library from https://github.com/sixohsix/twitter
