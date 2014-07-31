@@ -133,6 +133,7 @@ class TwitterApi:
         starting with the most recent one."""
         kwargs = {'count': 500, 'screen_name': self.screen_name}
         kwargs.update(args)
+        self.screen_name = kwargs['screen_name']    # in case it was overridden
         exc_count = 0
         while True:
             try:
@@ -157,7 +158,6 @@ class Week:
     def __init__(self, mid_week, twitter):
         latest = sunday_after(mid_week, 1)
         earliest = sunday_after(mid_week, -1)
-        self.screen_name = twitter.screen_name
         self.tweets = []
         for tweet in twitter.get_tweets():
             tweet = Tweet(tweet)
@@ -170,6 +170,7 @@ class Week:
                 self.tweets.append(tweet)
         self.tweets.sort(key=operator.attrgetter('time'))
         self.sunday = sunday_after(self.tweets[0].time) if self.tweets else None
+        self.screen_name = twitter.screen_name
 
     def entry(self):
         e = ["Die Kurzmeldungen letzter Woche", '', '<dl>']
