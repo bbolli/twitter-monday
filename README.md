@@ -19,13 +19,15 @@ saved.
 
 ## twitter-complete
 
-`python complete.py`
+`python complete.py [-r]`
 
 `complete.py` creates a complete backup of your tweets, as far as they are
 returned by the Twitter API.
 
 The output is a file called `all-tweets.json`. It contains the tweets in their
 original JSON format.
+
+With option `-r`, shortened `t.co` URLs are expanded.
 
 ## Dependencies
 
