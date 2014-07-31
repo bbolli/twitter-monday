@@ -78,16 +78,18 @@ class Tweet:
     def munge(self):
         self.text = self._munge(self.text)
 
-    def _munge(self, text):
+    @classmethod
+    def _munge(cls, text):
         m = re.match(r'^(.*\()(http://[^)]*)(\).*$)', text, re.M)
         if m:
-            return self._munge(m.group(1)) + self._check_url(m.group(2)) + self._munge(m.group(3))
+            return cls._munge(m.group(1)) + cls._check_url(m.group(2)) + cls._munge(m.group(3))
         m = re.match(r'^(.*)(http://[!-~]+)(.*)$', text, re.M)
         if m:
-            return self._munge(m.group(1)) + self._check_url(m.group(2)) + self._munge(m.group(3))
+            return cls._munge(m.group(1)) + cls._check_url(m.group(2)) + cls._munge(m.group(3))
         return text.replace('&amp;gt;', '&gt;').replace('&amp;lt;', '&lt;')
 
-    def _check_url(self, u):
+    @classmethod
+    def _check_url(cls, u):
         trailer = ''
         m = re.match(r'([,\)])$', u)
         if m:
