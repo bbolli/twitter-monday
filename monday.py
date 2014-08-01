@@ -82,6 +82,10 @@ class Tweet:
             text = text.replace(u['url'],
                 '<a href=\'%(expanded_url)s\'>%(display_url)s</a>' % u
             )
+        for m in entities.get('media', []):
+            text = text.replace(m['url'],
+                '<a href=\'%(media_url_https)s\'>%(display_url)s</a>' % m
+            )
         return text.replace('&amp;gt;', '&gt;').replace('&amp;lt;', '&lt;')
 
 
