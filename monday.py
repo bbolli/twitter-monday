@@ -8,14 +8,11 @@ import codecs
 from datetime import datetime, timedelta
 from email.utils import parsedate_tz, mktime_tz
 import errno
-import httplib
 import locale
 import operator
 import os
-import re
 import sys
 import time
-import urlparse
 
 from twitter.api import Twitter, TwitterError
 from twitter.oauth import OAuth, write_token_file, read_token_file
@@ -68,6 +65,7 @@ class Tweet:
         self.source = d.get('source', '')
         self.reply_person = d.get('in_reply_to_screen_name')
         self.reply_tweet = d.get('in_reply_to_status_id')
+        self.entities = d['entities']
         self.time = datetime.fromtimestamp(
             mktime_tz(parsedate_tz(d['created_at']))
         )
@@ -76,38 +74,15 @@ class Tweet:
         return u'%(time)s %(text)r' % self.__dict__
 
     def munge(self):
-        self.text = self._munge(self.text)
+        self.text = self._munge(self.text, self.entities)
 
     @classmethod
-    def _munge(cls, text):
-        m = re.match(r'^(.*\()(http://[^)]*)(\).*$)', text, re.M)
-        if m:
-            return cls._munge(m.group(1)) + cls._check_url(m.group(2)) + cls._munge(m.group(3))
-        m = re.match(r'^(.*)(http://[!-~]+)(.*)$', text, re.M)
-        if m:
-            return cls._munge(m.group(1)) + cls._check_url(m.group(2)) + cls._munge(m.group(3))
+    def _munge(cls, text, entities):
+        for u in entities.get('urls', []):
+            text = text.replace(u['url'],
+                '<a href=\'%(expanded_url)s\'>%(display_url)s</a>' % u
+            )
         return text.replace('&amp;gt;', '&gt;').replace('&amp;lt;', '&lt;')
-
-    @classmethod
-    def _check_url(cls, u):
-        trailer = ''
-        m = re.match(r'([,\)])$', u)
-        if m:
-            trailer = m.group()
-            u = u[:-1]
-        try:
-            url = urlparse.urlsplit(u)
-            conn = httplib.HTTPConnection(url.netloc)
-            path = url.path + ('?' + url.query if url.query else '')
-            conn.request('HEAD', path)
-            resp = conn.getresponse()
-            if resp.status in (301, 302, 303) and resp.getheader('Location'):
-                u = resp.getheader('Location').replace('&', '&amp;')
-        except Exception as e:
-            print("Blew up on %s: %s" % (u, e), file=sys.stderr)
-        m = re.match(r'http://(.*)', u)
-        label = m.group(1) if m else u
-        return '<a href="%s">%s</a>%s' % (u, label, trailer)
 
 
 class TwitterApi:
