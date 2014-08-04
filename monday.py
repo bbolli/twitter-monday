@@ -154,9 +154,10 @@ class Week:
         self.screen_name = twitter.screen_name
 
     def entry(self):
-        e = ["Die Kurzmeldungen letzter Woche", '', '<dl>']
+        e = ["Die Kurzmeldungen letzter Woche", '']
         _e = e.append
 
+        _e('<dl class=\'tweet\'>')
         for i, tweet in enumerate(self.tweets):
             _e('<dt id=\'p-%d\'>%s</dt>' % (i + 1, strftime(tweet.time, '%A, %H:%M')))
             _e('<dd>%s' % tweet.text)
