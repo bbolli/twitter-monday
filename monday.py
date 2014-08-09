@@ -166,7 +166,7 @@ class Week:
                 who = 'http://twitter.com/%s' % tweet.reply_person
                 if tweet.reply_tweet:
                     who += '/status/%s' % tweet.reply_tweet
-                attrib = "; Antwort auf <a href='%s'>@%s</a>" % (who, tweet.reply_person)
+                attrib = "; Antwort an <a href='%s'>@%s</a>" % (who, tweet.reply_person)
             url = 'http://twitter.com/%s/status/%s' % (self.screen_name, tweet.t_id)
             _e('[<a href=\'%s\'>Original</a>%s]</dd>' % (url, attrib))
         _e('</dl>')
