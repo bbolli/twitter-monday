@@ -16,10 +16,8 @@ parser.add_argument('screen_name', type=str, nargs='?',
 options = parser.parse_args()
 
 api = TwitterApi()
-if options.screen_name:
-    tweets = list(api.get_tweets(screen_name=options.screen_name))
-else:
-    tweets = list(api.get_tweets())
+params = {'screen_name': options.screen_name} if options.screen_name else {}
+tweets = list(api.get_tweets(**params))
 
 if options.resolve:
     munge = Tweet._munge
