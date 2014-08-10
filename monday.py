@@ -103,8 +103,7 @@ class TwitterApi:
             )
         oauth_token, oauth_token_secret = read_token_file(OAUTH_FILENAME)
         self.api = Twitter(
-            auth=OAuth(oauth_token, oauth_token_secret, CONSUMER_KEY, CONSUMER_SECRET),
-            domain='api.twitter.com'
+            auth=OAuth(oauth_token, oauth_token_secret, CONSUMER_KEY, CONSUMER_SECRET)
         )
         user = self.api.account.settings(_method='GET')
         self.screen_name = user['screen_name']
