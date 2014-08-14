@@ -114,10 +114,14 @@ class TwitterApi:
         kwargs = {'count': 500, 'screen_name': self.screen_name}
         kwargs.update(args)
         self.screen_name = kwargs['screen_name']    # in case it was overridden
+        for t in self._get_all(self.api.statuses.user_timeline, kwargs):
+            yield t
+
+    def _get_all(self, api_fn, kwargs):
         exc_count = 0
         while True:
             try:
-                tweets = self.api.statuses.user_timeline(**kwargs)
+                tweets = api_fn(**kwargs)
             except TwitterError as e:
                 print(e, file=sys.stderr)
                 exc_count += 1
