@@ -181,11 +181,8 @@ def main(mid_week, touch=False):
     if not w.sunday:  # no tweets in this week
         return
     path = os.path.join('tweets', w.sunday.strftime('%Y'))
-    try:
+    if not os.path.isdir(path):
         os.makedirs(path)
-    except OSError as e:
-        if e.errno != errno.EEXIST:
-            raise
     path = os.path.join(path, w.sunday.strftime('short-%Y-%m-%d.txt'))
     with codecs.open(path, 'w', encoding) as f:
         f.write(w.entry())
