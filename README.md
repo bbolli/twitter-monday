@@ -27,7 +27,7 @@ returned by the Twitter API.
 The output is a file called `@<screen_name>.json`. It contains the tweets in their
 original JSON format.
 
-Option `-f` returns the user's favorites tweets instead of their own.
+Option `-f` returns the user's favorite tweets instead of their own.
 
 With option `-r`, shortened `t.co` URLs are expanded.
 
