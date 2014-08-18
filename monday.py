@@ -88,7 +88,7 @@ class Tweet:
                 '<a href=\'%(media_url_https)s\'>%(display_url)s</a>' % m
             )
             if m['type'] == 'photo':
-                text += '\n<img src=\'%(media_url_https)s\' /><br />' % m
+                text += '<br />\n<img src=\'%(media_url_https)s\' />' % m
         return text.replace('&amp;gt;', '&gt;').replace('&amp;lt;', '&lt;')
 
 
