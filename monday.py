@@ -66,6 +66,7 @@ class Tweet:
         self.reply_person = d.get('in_reply_to_screen_name')
         self.reply_tweet = d.get('in_reply_to_status_id')
         self.entities = d['entities']
+        self.ext_entities = d.get('extended_entities', {})
         self.time = datetime.fromtimestamp(
             mktime_tz(parsedate_tz(d['created_at']))
         )
@@ -74,15 +75,15 @@ class Tweet:
         return u'%(time)s %(text)r' % self.__dict__
 
     def munge(self):
-        self.text = self._munge(self.text, self.entities)
+        self.text = self._munge(self.text, self.entities, self.ext_entities)
 
     @classmethod
-    def _munge(cls, text, entities):
+    def _munge(cls, text, entities, ext_entities):
         for u in entities.get('urls', []):
             text = text.replace(u['url'],
                 '<a href=\'%(expanded_url)s\'>%(display_url)s</a>' % u
             )
-        for m in entities.get('media', []):
+        for m in ext_entities.get('media', []):
             text = text.replace(m['url'],
                 '<a href=\'%(media_url_https)s\'>%(display_url)s</a>' % m
             )

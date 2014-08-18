@@ -30,7 +30,7 @@ tweets = list(tweets)
 if options.resolve:
     munge = Tweet._munge
     for t in tweets:
-        t['text'] = munge(t['text'], t['entities'])
+        t['text'] = munge(t['text'], t['entities'], t.get('extended_entities', {}))
 
 with open('@%s.json' % api.screen_name, 'w') as f:
     json.dump(tweets, f, indent=2, sort_keys=True, separators=(',', ': '))
