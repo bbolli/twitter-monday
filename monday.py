@@ -87,7 +87,7 @@ class Tweet:
                 who += '/status/%s' % self.reply_tweet
             attrib = "; Antwort an <a href='%s'>@%s</a>" % (who, self.reply_person)
         url = 'http://twitter.com/%s/status/%s' % (self.screen_name, self.t_id)
-        out('[<a href=\'%s\'>Original</a>%s]</%s>' % (url, attrib, text_tag))
+        out('[<a href=\'%s\'>%s</a>%s]</%s>' % (url, "Original", attrib, text_tag))
 
     def munge(self):
         self.text = self._munge(self.text, self.entities, self.ext_entities)
