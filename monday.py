@@ -67,12 +67,25 @@ class Tweet:
         self.reply_tweet = d.get('in_reply_to_status_id')
         self.entities = d['entities']
         self.ext_entities = d.get('extended_entities', {})
+        self.screen_name = d['user']['screen_name']
         self.time = datetime.fromtimestamp(
             mktime_tz(parsedate_tz(d['created_at']))
         )
 
     def __repr__(self):
         return u'%(time)s %(text)r' % self.__dict__
+
+    def as_html(self, date_tag, text_tag, out):
+        out('<%s>%s</%s>' % (date_tag, strftime(self.time, '%A, %H:%M'), date_tag))
+        out('<%s>%s' % (text_tag, self.text))
+        attrib = ''
+        if self.reply_person:
+            who = 'http://twitter.com/%s' % self.reply_person
+            if self.reply_tweet:
+                who += '/status/%s' % self.reply_tweet
+            attrib = "; Antwort an <a href='%s'>@%s</a>" % (who, self.reply_person)
+        url = 'http://twitter.com/%s/status/%s' % (self.screen_name, self.t_id)
+        out('[<a href=\'%s\'>Original</a>%s]</%s>' % (url, attrib, text_tag))
 
     def munge(self):
         self.text = self._munge(self.text, self.entities, self.ext_entities)
@@ -155,7 +168,6 @@ class Week:
                 self.tweets.append(tweet)
         self.tweets.sort(key=operator.attrgetter('time'))
         self.sunday = sunday_after(self.tweets[0].time) if self.tweets else None
-        self.screen_name = twitter.screen_name
 
     def entry(self):
         e = ["Die Kurzmeldungen letzter Woche", '']
@@ -163,16 +175,7 @@ class Week:
 
         _e('<dl class=\'tweet\'>')
         for tweet in self.tweets:
-            _e('<dt>%s</dt>' % strftime(tweet.time, '%A, %H:%M'))
-            _e('<dd>%s' % tweet.text)
-            attrib = ''
-            if tweet.reply_person:
-                who = 'http://twitter.com/%s' % tweet.reply_person
-                if tweet.reply_tweet:
-                    who += '/status/%s' % tweet.reply_tweet
-                attrib = "; Antwort an <a href='%s'>@%s</a>" % (who, tweet.reply_person)
-            url = 'http://twitter.com/%s/status/%s' % (self.screen_name, tweet.t_id)
-            _e('[<a href=\'%s\'>Original</a>%s]</dd>' % (url, attrib))
+            tweet.as_html('dt', 'dd', _e)
         _e('</dl>')
         return '\n'.join(e) + '\n'
 
