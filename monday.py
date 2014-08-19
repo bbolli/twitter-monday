@@ -76,7 +76,9 @@ class Tweet:
         return u'%(time)s %(text)r' % self.__dict__
 
     def as_html(self, date_tag, text_tag, out):
-        out('<%s>%s</%s>' % (date_tag, strftime(self.time, '%A, %H:%M'), date_tag))
+        out('<%s id=\'p-%s\'>%s</%s>' % (
+            date_tag, self.t_id, strftime(self.time, '%A, %H:%M'), date_tag
+        ))
         out('<%s>%s' % (text_tag, self.text))
         attrib = ''
         if self.reply_person:
