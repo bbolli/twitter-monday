@@ -94,6 +94,7 @@ class Tweet:
 
     @staticmethod
     def _munge(text, entities, ext_entities):
+        text = text.replace('\n', '<br />\n')
         for u in entities.get('urls', []):
             text = text.replace(u['url'],
                 '<a href=\'%(expanded_url)s\'>%(display_url)s</a>' % u
