@@ -186,7 +186,7 @@ class Week:
 def main(mid_week):
     w = Week(mid_week, TwitterApi())
     if not w.tweets:  # no tweets in this week
-        return
+        return 0
     path = os.path.join('tweets', w.sunday.strftime('%Y'))
     if not os.path.isdir(path):
         os.makedirs(path)
@@ -196,11 +196,14 @@ def main(mid_week):
     mtime = time.mktime(w.sunday.timetuple())
     os.utime(path, (mtime, mtime))
     print("Wrote", path)
+    return len(w.tweets)
 
 if __name__ == '__main__':
     args = sys.argv[1:]
     if args:
-        for day in args:
-            main(datetime.strptime(day, '%Y-%m-%d'))
+        count = sum(
+            main(datetime.strptime(day, '%Y-%m-%d')) for day in args
+        )
     else:
-        main(datetime.now() - timedelta(weeks=1))
+        count = main(datetime.now() - timedelta(weeks=1))
+    sys.exit(0 if count else 1)
