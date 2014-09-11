@@ -170,7 +170,7 @@ class Week:
                 tweet.munge()
                 self.tweets.append(tweet)
         self.tweets.sort(key=operator.attrgetter('time'))
-        self.sunday = sunday_after(self.tweets[0].time) if self.tweets else None
+        self.sunday = latest
 
     def entry(self):
         e = ["Die Kurzmeldungen letzter Woche", '']
@@ -185,7 +185,7 @@ class Week:
 
 def main(mid_week):
     w = Week(mid_week, TwitterApi())
-    if not w.sunday:  # no tweets in this week
+    if not w.tweets:  # no tweets in this week
         return
     path = os.path.join('tweets', w.sunday.strftime('%Y'))
     if not os.path.isdir(path):
