@@ -22,7 +22,8 @@ from twitter.oauth_dance import oauth_dance
 # Registered by @swissbolli
 CONSUMER_KEY = '2fLClfUjnO720IiTSZXwxiQM6'
 CONSUMER_SECRET = 'uHLl38PJy1clObRCWHkjRy3nP3h0km7LLTXSiXMRF9ExBUjBVF'
-OAUTH_FILENAME = os.environ.get('HOME', os.environ.get('USERPROFILE', '.')) + os.sep + '.twitter_monday_oauth'
+OAUTH_FILENAME = os.environ.get('HOME', os.environ.get('USERPROFILE', '.')) + \
+    os.sep + '.twitter_monday_oauth'
 
 # ignore tweets originating from these sources
 IGNORE_SOURCES = ('tumblr', 'instagram')
@@ -50,8 +51,9 @@ def sunday_after(dt, offset=1):
     s = s.replace(hour=23, minute=59, second=59, microsecond=0)
 
     # Watch out for DST transition
-    #s -= s.gmtoff - t.gmtoff
+    # s -= s.gmtoff - t.gmtoff
     return s
+
 
 def strftime(t, format):
     return t.strftime(format).decode(time_encoding)
@@ -224,7 +226,6 @@ if __name__ == '__main__':
                     r[0] += timedelta(weeks=1)
             else:
                 print("Ignoring unparseable argument '%s'" % a, file=sys.stderr)
-
 
     args = sys.argv[1:]
     if args:
