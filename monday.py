@@ -122,7 +122,7 @@ class TwitterApi:
         self.api = Twitter(
             auth=OAuth(oauth_token, oauth_token_secret, CONSUMER_KEY, CONSUMER_SECRET)
         )
-        user = self.api.account.settings(_method='GET')
+        user = self._call_with_retry(self.api.account.settings, _method='GET')
         self.screen_name = user['screen_name']
 
     def get_tweets(self, **args):
