@@ -136,8 +136,17 @@ class TwitterApi:
 
     def _get_all(self, api_fn, kwargs):
         while True:
+            tweets = self._call_with_retry(api_fn, **kwargs)
+            if not tweets:
+                break
+            for tweet in tweets:
+                yield tweet
+                kwargs['max_id'] = tweet['id'] - 1
+
+    def _call_with_retry(self, api_fn, **kwargs):
+        while True:
             try:
-                tweets = api_fn(**kwargs)
+                return api_fn(**kwargs)
             except TwitterHTTPError as te:
                 if te.e.code == 429:
                     # API rate limit reached
@@ -151,12 +160,6 @@ class TwitterApi:
                     print(te, file=sys.stderr)
                     sys.exit(1)
                 time.sleep(delay)
-                continue
-            if not tweets:
-                break
-            for tweet in tweets:
-                yield tweet
-                kwargs['max_id'] = tweet['id'] - 1
 
 
 class Week:
