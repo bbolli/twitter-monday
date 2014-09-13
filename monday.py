@@ -207,11 +207,29 @@ def main(mid_week):
     print("Wrote", path)
     return len(w.tweets)
 
+
 if __name__ == '__main__':
+
+    def parse_date_ranges(args):
+        for a in args:
+            try:
+                r = [datetime.strptime(d, '%Y-%m-%d') for d in a.split('..')]
+            except ValueError as e:
+                r = []
+            if len(r) == 1:
+                yield r[0]
+            elif len(r) == 2:
+                while r[0] <= r[1]:
+                    yield r[0]
+                    r[0] += timedelta(weeks=1)
+            else:
+                print("Ignoring unparseable argument '%s'" % a, file=sys.stderr)
+
+
     args = sys.argv[1:]
     if args:
         count = sum(
-            main(datetime.strptime(day, '%Y-%m-%d')) for day in args
+            main(day) for day in parse_date_ranges(args)
         )
     else:
         count = main(datetime.now() - timedelta(weeks=1))

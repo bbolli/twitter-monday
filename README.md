@@ -1,12 +1,13 @@
 ## twitter-monday
 
-Usage: `python monday.py [<date> ...]`
+Usage: `python monday.py [ <date>|<from>..<to> ...]`
 
 `monday.py` creates a blog entry containing one week's worth of tweets.
 
 Without arguments, the period is the last week (Monday to Sunday). With
 parameters, entries are generated for the week “surrounding” each date given
-(again, Monday to Sunday).
+(again, Monday to Sunday). Ranges are allowed; start and end dates are
+separated by two full stops (`..`).
 
 The files are created under `tweets/<year>/short-<year>-<month>-<day>.txt`.
 
