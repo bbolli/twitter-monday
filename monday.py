@@ -14,7 +14,7 @@ import os
 import sys
 import time
 
-from twitter.api import Twitter, TwitterError
+from twitter.api import Twitter, TwitterHTTPError
 from twitter.oauth import OAuth, write_token_file, read_token_file
 from twitter.oauth_dance import oauth_dance
 
@@ -135,16 +135,22 @@ class TwitterApi:
             yield t
 
     def _get_all(self, api_fn, kwargs):
-        exc_count = 0
         while True:
             try:
                 tweets = api_fn(**kwargs)
-            except TwitterError as e:
-                print(e, file=sys.stderr)
-                exc_count += 1
-                if exc_count >= 10:
-                    break
-                time.sleep(3)
+            except TwitterHTTPError as te:
+                if te.e.code == 429:
+                    # API rate limit reached
+                    reset = int(te.e.headers.get('X-Rate-Limit-Reset', time.time() + 30))
+                    delay = int(reset - time.time()) + 2
+                    print("API rate limit reached; waiting for %ds..." % delay, file=sys.stderr)
+                elif te.e.code in (502, 503, 504):
+                    delay = 30
+                    print("Service unavailable; waiting for %ds..." % delay, file=sys.stderr)
+                else:
+                    print(te, file=sys.stderr)
+                    sys.exit(1)
+                time.sleep(delay)
                 continue
             if not tweets:
                 break
