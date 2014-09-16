@@ -137,9 +137,10 @@ class TwitterApi:
             )
         oauth_token, oauth_token_secret = read_token_file(OAUTH_FILENAME)
         self.api = Twitter(
-            auth=OAuth(oauth_token, oauth_token_secret, CONSUMER_KEY, CONSUMER_SECRET)
+            auth=OAuth(oauth_token, oauth_token_secret, CONSUMER_KEY, CONSUMER_SECRET),
+            retry=5
         )
-        user = self._call_with_retry(self.api.account.settings, _method='GET')
+        user = self.api.account.settings(_method='GET')
         self.screen_name = user['screen_name']
 
     def get_tweets(self, **args):
@@ -153,30 +154,12 @@ class TwitterApi:
 
     def _get_all(self, api_fn, kwargs):
         while True:
-            tweets = self._call_with_retry(api_fn, **kwargs)
+            tweets = api_fn(**kwargs)
             if not tweets:
                 break
             for tweet in tweets:
                 yield tweet
                 kwargs['max_id'] = tweet['id'] - 1
-
-    def _call_with_retry(self, api_fn, **kwargs):
-        while True:
-            try:
-                return api_fn(**kwargs)
-            except TwitterHTTPError as te:
-                if te.e.code == 429:
-                    # API rate limit reached
-                    reset = int(te.e.headers.get('X-Rate-Limit-Reset', time.time() + 30))
-                    delay = int(reset - time.time()) + 2
-                    print("API rate limit reached; waiting for %ds..." % delay, file=sys.stderr)
-                elif te.e.code in (502, 503, 504):
-                    delay = 30
-                    print("Service unavailable; waiting for %ds..." % delay, file=sys.stderr)
-                else:
-                    print(te, file=sys.stderr)
-                    sys.exit(1)
-                time.sleep(delay)
 
 
 class Week:
