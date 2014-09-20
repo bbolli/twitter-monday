@@ -37,6 +37,8 @@ except locale.Error:
 encoding = locale.getdefaultlocale()[1]
 time_encoding = locale.getlocale(locale.LC_TIME)[1] or encoding
 
+ONE_WEEK = timedelta(weeks=1)
+
 
 def sunday_after(dt, offset=1):
     """offset == 3 means 3rd Sunday from now, -2 means two Sundays back"""
@@ -44,7 +46,7 @@ def sunday_after(dt, offset=1):
         raise ArgumentError("offset must be nonzero")
     if offset > 0:
         offset -= 1
-    dt += timedelta(weeks=offset)
+    dt += ONE_WEEK * offset
 
     # 23:59:59 on next Sunday
     s = dt + timedelta(days=6 - dt.weekday())
@@ -223,7 +225,7 @@ if __name__ == '__main__':
             elif len(r) == 2:
                 while r[0] <= r[1]:
                     yield r[0]
-                    r[0] += timedelta(weeks=1)
+                    r[0] += ONE_WEEK
             else:
                 print("Ignoring unparseable argument '%s'" % a, file=sys.stderr)
 
@@ -233,5 +235,5 @@ if __name__ == '__main__':
             main(day) for day in parse_date_ranges(args)
         )
     else:
-        count = main(datetime.now() - timedelta(weeks=1))
+        count = main(datetime.now() - ONE_WEEK)
     sys.exit(0 if count else 1)
