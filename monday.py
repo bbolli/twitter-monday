@@ -195,21 +195,24 @@ class Week:
         _e('</dl>')
         return '\n'.join(e) + '\n'
 
+    def write(self):
+        if not self.tweets:  # no tweets in this week
+            return 0
+        sun = self.sunday
+        path = os.path.join('tweets', sun.strftime('%Y'))
+        if not os.path.isdir(path):
+            os.makedirs(path)
+        path = os.path.join(path, sun.strftime('short-%Y-%m-%d.txt'))
+        with codecs.open(path, 'w', encoding) as f:
+            f.write(self.entry())
+        mtime = time.mktime(sun.timetuple())
+        os.utime(path, (mtime, mtime))
+        print("Wrote", path)
+        return len(self.tweets)
+
 
 def main(mid_week):
-    w = Week(mid_week, TwitterApi())
-    if not w.tweets:  # no tweets in this week
-        return 0
-    path = os.path.join('tweets', w.sunday.strftime('%Y'))
-    if not os.path.isdir(path):
-        os.makedirs(path)
-    path = os.path.join(path, w.sunday.strftime('short-%Y-%m-%d.txt'))
-    with codecs.open(path, 'w', encoding) as f:
-        f.write(w.entry())
-    mtime = time.mktime(w.sunday.timetuple())
-    os.utime(path, (mtime, mtime))
-    print("Wrote", path)
-    return len(w.tweets)
+    return Week(mid_week, TwitterApi()).write()
 
 
 if __name__ == '__main__':
