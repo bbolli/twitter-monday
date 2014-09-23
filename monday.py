@@ -211,8 +211,12 @@ class Week:
         return len(self.tweets)
 
 
-def main(mid_week):
+def one_week(mid_week):
     return Week(mid_week, TwitterApi()).write()
+
+
+def all_weeks(mid_weeks):
+    return sum(one_week(day) for day in mid_weeks)
 
 
 if __name__ == '__main__':
@@ -234,9 +238,9 @@ if __name__ == '__main__':
 
     args = sys.argv[1:]
     if args:
-        count = sum(
-            main(day) for day in parse_date_ranges(args)
-        )
+        dates = [day for day in parse_date_ranges(args)]
     else:
-        count = main(datetime.now() - ONE_WEEK)
+        dates = [datetime.now() - ONE_WEEK]
+
+    count = all_weeks(dates)
     sys.exit(0 if count else 1)
