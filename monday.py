@@ -8,6 +8,7 @@ import codecs
 from datetime import datetime, timedelta
 from email.utils import parsedate_tz, mktime_tz
 import errno
+import itertools
 import locale
 import operator
 import os
@@ -172,22 +173,16 @@ class TwitterApi:
 
 class Week:
 
-    # Monday-to-Sunday week of tweets around mid_week
-    def __init__(self, mid_week, twitter):
-        latest = sunday_after(mid_week, 1)
-        earliest = sunday_after(mid_week, -1)
+    # Monday-to-Sunday week of tweets ending at sunday
+    def __init__(self, sunday, tweets):
         self.tweets = []
-        for tweet in twitter.get_tweets():
+        for tweet in tweets:
             tweet = Tweet(tweet)
-            if tweet.time <= earliest:
-                break
-            if any(i in tweet.source for i in IGNORE_SOURCES):
-                continue
-            if tweet.time <= latest:
+            if not any(s in tweet.source for s in IGNORE_SOURCES):
                 tweet.munge()
                 self.tweets.append(tweet)
         self.tweets.sort(key=operator.attrgetter('time'))
-        self.sunday = latest
+        self.sunday = sunday
 
     def entry(self):
         e = ["Die Kurzmeldungen letzter Woche", '']
@@ -215,12 +210,21 @@ class Week:
         return len(self.tweets)
 
 
-def one_week(mid_week):
-    return Week(mid_week, TwitterApi()).write()
-
-
 def all_weeks(mid_weeks):
-    return sum(one_week(day) for day in mid_weeks)
+    # set(...) removes duplicate dates
+    sundays = sorted(set(sunday_after(d) for d in mid_weeks))
+    latest = sundays[-1]
+    earliest = sundays[0] - ONE_WEEK
+    twitter = TwitterApi()
+    count = 0
+    for sunday, tweets in itertools.groupby(twitter.get_tweets(),
+        key=lambda t: sunday_after(Tweet._time(t))
+    ):
+        if sunday <= earliest:
+            break
+        if sunday in sundays:
+            count += Week(sunday, tweets).write()
+    return count
 
 
 if __name__ == '__main__':
@@ -242,7 +246,7 @@ if __name__ == '__main__':
 
     args = sys.argv[1:]
     if args:
-        dates = [day for day in parse_date_ranges(args)]
+        dates = parse_date_ranges(args)
     else:
         dates = [datetime.now() - ONE_WEEK]
 
