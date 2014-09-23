@@ -72,7 +72,11 @@ class Tweet:
         self.entities = d['entities']
         self.ext_entities = d.get('extended_entities', {})
         self.screen_name = d['user']['screen_name']
-        self.time = datetime.fromtimestamp(
+        self.time = self._time(d)
+
+    @staticmethod
+    def _time(d):
+        return datetime.fromtimestamp(
             mktime_tz(parsedate_tz(d['created_at']))
         )
 
