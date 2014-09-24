@@ -74,6 +74,10 @@ class Tweet:
         self.screen_name = d['user']['screen_name']
         self.time = self._time(d)
         self.munge()
+        if 'retweeted_status' in d:
+            original = Tweet(d['retweeted_status'])
+            self.text = "RT @%s: %s" % (original.screen_name, original.text)
+            # original.text is already munged
 
     @staticmethod
     def _ignore(d):
