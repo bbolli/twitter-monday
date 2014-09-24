@@ -67,13 +67,17 @@ class Tweet:
     def __init__(self, d):
         self.text = d['text']
         self.t_id = d['id']
-        self.source = d.get('source', '')
         self.reply_person = d.get('in_reply_to_screen_name')
         self.reply_tweet = d.get('in_reply_to_status_id')
         self.entities = d['entities']
         self.ext_entities = d.get('extended_entities', {})
         self.screen_name = d['user']['screen_name']
         self.time = self._time(d)
+        self.munge()
+
+    @staticmethod
+    def _ignore(d):
+        return any(s in d.get('source', '') for s in IGNORE_SOURCES)
 
     @staticmethod
     def _time(d):
@@ -175,13 +179,9 @@ class Week:
 
     # Monday-to-Sunday week of tweets ending at sunday
     def __init__(self, sunday, tweets):
-        self.tweets = []
-        for tweet in tweets:
-            tweet = Tweet(tweet)
-            if not any(s in tweet.source for s in IGNORE_SOURCES):
-                tweet.munge()
-                self.tweets.append(tweet)
-        self.tweets.sort(key=operator.attrgetter('time'))
+        self.tweets = sorted((
+            Tweet(t) for t in tweets if not Tweet._ignore(t)
+        ), key=operator.attrgetter('time'))
         self.sunday = sunday
 
     def entry(self):
