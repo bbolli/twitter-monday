@@ -217,7 +217,6 @@ class Week:
 def all_weeks(mid_weeks):
     # set(...) removes duplicate dates
     sundays = sorted(set(sunday_after(d) for d in mid_weeks))
-    latest = sundays[-1]
     earliest = sundays[0] - ONE_WEEK
     twitter = TwitterApi()
     count = 0
