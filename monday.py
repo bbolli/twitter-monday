@@ -152,7 +152,8 @@ class TwitterApi:
         for t in self.get_all(self.api.statuses.user_timeline, kwargs):
             yield t
 
-    def get_all(self, api_fn, kwargs):
+    @staticmethod
+    def get_all(api_fn, kwargs):
         while True:
             tweets = api_fn(**kwargs)
             if not tweets:
