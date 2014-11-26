@@ -87,6 +87,21 @@ class Tweet:
             mktime_tz(parsedate_tz(d['created_at']))
         )
 
+    @staticmethod
+    def munge_text(d):
+        text = d['text'].replace('\n', '<br />\n')
+        for u in d['entities'].get('urls', []):
+            text = text.replace(u['url'],
+                '<a href=\'%(expanded_url)s\'>%(display_url)s</a>' % u
+            )
+        for m in d.get('extended_entities', {}).get('media', []):
+            text = text.replace(m['url'],
+                '<a href=\'%(media_url_https)s\'>%(display_url)s</a>' % m
+            )
+            if m['type'] == 'photo':
+                text += '<br />\n<img src=\'%(media_url_https)s\' alt=\'\' />' % m
+        d['text'] = text.replace('&amp;gt;', '&gt;').replace('&amp;lt;', '&lt;')
+
     def __repr__(self):
         return u'%(time)s %(text)r' % self.__dict__
 
@@ -103,21 +118,6 @@ class Tweet:
             attrib = "; Antwort an <a href='%s'>@%s</a>" % (who, self.reply_person)
         url = 'http://twitter.com/%s/status/%s' % (self.screen_name, self.t_id)
         out('[<a href=\'%s\'>%s</a>%s]</%s>' % (url, "Original", attrib, text_tag))
-
-    @staticmethod
-    def munge_text(d):
-        text = d['text'].replace('\n', '<br />\n')
-        for u in d['entities'].get('urls', []):
-            text = text.replace(u['url'],
-                '<a href=\'%(expanded_url)s\'>%(display_url)s</a>' % u
-            )
-        for m in d.get('extended_entities', {}).get('media', []):
-            text = text.replace(m['url'],
-                '<a href=\'%(media_url_https)s\'>%(display_url)s</a>' % m
-            )
-            if m['type'] == 'photo':
-                text += '<br />\n<img src=\'%(media_url_https)s\' alt=\'\' />' % m
-        d['text'] = text.replace('&amp;gt;', '&gt;').replace('&amp;lt;', '&lt;')
 
 
 class TwitterApi:
