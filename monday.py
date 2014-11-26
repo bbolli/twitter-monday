@@ -72,19 +72,19 @@ class Tweet:
         self.entities = d['entities']
         self.ext_entities = d.get('extended_entities', {})
         self.screen_name = d['user']['screen_name']
-        self.time = self._time(d)
-        self.munge()
+        self.time = self.created(d)
+        self.munge_text()
         if 'retweeted_status' in d:
             original = Tweet(d['retweeted_status'])
             self.text = "RT @%s: %s" % (original.screen_name, original.text)
             # original.text is already munged
 
     @staticmethod
-    def _ignore(d):
+    def ignore(d):
         return any(s in d.get('source', '') for s in IGNORE_SOURCES)
 
     @staticmethod
-    def _time(d):
+    def created(d):
         return datetime.fromtimestamp(
             mktime_tz(parsedate_tz(d['created_at']))
         )
@@ -106,11 +106,11 @@ class Tweet:
         url = 'http://twitter.com/%s/status/%s' % (self.screen_name, self.t_id)
         out('[<a href=\'%s\'>%s</a>%s]</%s>' % (url, "Original", attrib, text_tag))
 
-    def munge(self):
-        self.text = self._munge(self.text, self.entities, self.ext_entities)
+    def munge_text(self):
+        self.text = self.munge(self.text, self.entities, self.ext_entities)
 
     @staticmethod
-    def _munge(text, entities, ext_entities):
+    def munge(text, entities, ext_entities):
         text = text.replace('\n', '<br />\n')
         for u in entities.get('urls', []):
             text = text.replace(u['url'],
@@ -149,10 +149,10 @@ class TwitterApi:
         kwargs = {'count': 500, 'screen_name': self.screen_name}
         kwargs.update(args)
         self.screen_name = kwargs['screen_name']    # in case it was overridden
-        for t in self._get_all(self.api.statuses.user_timeline, kwargs):
+        for t in self.get_all(self.api.statuses.user_timeline, kwargs):
             yield t
 
-    def _get_all(self, api_fn, kwargs):
+    def get_all(self, api_fn, kwargs):
         while True:
             tweets = api_fn(**kwargs)
             if not tweets:
@@ -167,7 +167,7 @@ class Week:
     # Monday-to-Sunday week of tweets ending at sunday
     def __init__(self, sunday, tweets):
         self.tweets = sorted((
-            Tweet(t) for t in tweets if not Tweet._ignore(t)
+            Tweet(t) for t in tweets if not Tweet.ignore(t)
         ), key=operator.attrgetter('time'))
         self.sunday = sunday
 
@@ -204,7 +204,7 @@ def all_weeks(mid_weeks):
     twitter = TwitterApi()
     count = 0
     for sunday, tweets in itertools.groupby(twitter.get_tweets(),
-        key=lambda t: sunday_after(Tweet._time(t))
+        key=lambda t: sunday_after(Tweet.created(t))
     ):
         if sunday <= earliest:
             break

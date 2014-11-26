@@ -22,13 +22,13 @@ api = TwitterApi()
 params = {'screen_name': options.screen_name} if options.screen_name else {}
 
 if options.favorites:
-    tweets = api._get_all(api.api.favorites.list, params)
+    tweets = api.get_all(api.api.favorites.list, params)
 else:
     tweets = api.get_tweets(**params)
 tweets = list(tweets)
 
 if options.resolve:
-    munge = Tweet._munge
+    munge = Tweet.munge
     for t in tweets:
         t['text'] = munge(t['text'], t['entities'], t.get('extended_entities', {}))
 
