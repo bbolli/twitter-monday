@@ -44,7 +44,7 @@ ONE_WEEK = timedelta(weeks=1)
 def sunday_after(dt, offset=1):
     """offset == 3 means 3rd Sunday from now, -2 means two Sundays back"""
     if offset == 0:
-        raise ArgumentError("offset must be nonzero")
+        raise ValueError("offset must be nonzero")
     if offset > 0:
         offset -= 1
     dt += ONE_WEEK * offset
