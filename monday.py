@@ -7,7 +7,6 @@ from __future__ import print_function
 import codecs
 from datetime import datetime, timedelta
 from email.utils import parsedate_tz, mktime_tz
-import errno
 import itertools
 import locale
 import operator
@@ -15,8 +14,8 @@ import os
 import sys
 import time
 
-from twitter.api import Twitter, TwitterHTTPError
-from twitter.oauth import OAuth, write_token_file, read_token_file
+from twitter.api import Twitter
+from twitter.oauth import OAuth, read_token_file
 from twitter.oauth_dance import oauth_dance
 
 
