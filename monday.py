@@ -64,19 +64,18 @@ def strftime(t, format):
 class Tweet:
 
     def __init__(self, d):
-        self.text = d['text']
         self.t_id = d['id']
         self.reply_person = d.get('in_reply_to_screen_name')
         self.reply_tweet = d.get('in_reply_to_status_id')
-        self.entities = d['entities']
-        self.ext_entities = d.get('extended_entities', {})
         self.screen_name = d['user']['screen_name']
         self.time = self.created(d)
-        self.munge_text()
         if 'retweeted_status' in d:
             original = Tweet(d['retweeted_status'])
             self.text = "RT @%s: %s" % (original.screen_name, original.text)
             # original.text is already munged
+        else:
+            self.munge_text(d)
+            self.text = d['text']
 
     @staticmethod
     def ignore(d):
@@ -105,23 +104,20 @@ class Tweet:
         url = 'http://twitter.com/%s/status/%s' % (self.screen_name, self.t_id)
         out('[<a href=\'%s\'>%s</a>%s]</%s>' % (url, "Original", attrib, text_tag))
 
-    def munge_text(self):
-        self.text = self.munge(self.text, self.entities, self.ext_entities)
-
     @staticmethod
-    def munge(text, entities, ext_entities):
-        text = text.replace('\n', '<br />\n')
-        for u in entities.get('urls', []):
+    def munge_text(d):
+        text = d['text'].replace('\n', '<br />\n')
+        for u in d['entities'].get('urls', []):
             text = text.replace(u['url'],
                 '<a href=\'%(expanded_url)s\'>%(display_url)s</a>' % u
             )
-        for m in ext_entities.get('media', []):
+        for m in d.get('extended_entities', {}).get('media', []):
             text = text.replace(m['url'],
                 '<a href=\'%(media_url_https)s\'>%(display_url)s</a>' % m
             )
             if m['type'] == 'photo':
                 text += '<br />\n<img src=\'%(media_url_https)s\' alt=\'\' />' % m
-        return text.replace('&amp;gt;', '&gt;').replace('&amp;lt;', '&lt;')
+        d['text'] = text.replace('&amp;gt;', '&gt;').replace('&amp;lt;', '&lt;')
 
 
 class TwitterApi:

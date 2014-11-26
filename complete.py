@@ -28,9 +28,9 @@ else:
 tweets = list(tweets)
 
 if options.resolve:
-    munge = Tweet.munge
+    munge_text = Tweet.munge_text
     for t in tweets:
-        t['text'] = munge(t['text'], t['entities'], t.get('extended_entities', {}))
+        munge_text(t)
 
 with open('@%s.json' % api.screen_name, 'w') as f:
     json.dump(tweets, f, indent=2, sort_keys=True, separators=(',', ': '))
