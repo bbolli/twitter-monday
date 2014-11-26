@@ -220,7 +220,7 @@ if __name__ == '__main__':
         for a in args:
             try:
                 r = [datetime.strptime(d, '%Y-%m-%d') for d in a.split('..')]
-            except ValueError as e:
+            except ValueError:
                 r = []
             if len(r) == 1:
                 yield r[0]
