@@ -105,11 +105,10 @@ class Tweet:
     def __repr__(self):
         return u'%(time)s %(text)r' % self.__dict__
 
-    def as_html(self, date_tag, text_tag, out):
-        out('<%s id=\'p-%s\'>%s</%s>' % (
-            date_tag, self.t_id, strftime(self.time, '%A, %H:%M'), date_tag
-        ))
-        out('<%s>%s' % (text_tag, self.text))
+    def as_html(self, date_tag, text_tag):
+        head = '<%s id=\'%s\'>%s</%s>\n' % (
+            date_tag, 'p-%s' % self.t_id, strftime(self.time, '%A, %H:%M'), date_tag,
+        )
         attrib = ''
         if self.reply_person:
             who = 'http://twitter.com/%s' % self.reply_person
@@ -117,7 +116,10 @@ class Tweet:
                 who += '/status/%s' % self.reply_tweet
             attrib = "; Antwort an <a href='%s'>@%s</a>" % (who, self.reply_person)
         url = 'http://twitter.com/%s/status/%s' % (self.screen_name, self.t_id)
-        out('[<a href=\'%s\'>%s</a>%s]</%s>' % (url, "Original", attrib, text_tag))
+        body = '<%s>%s\n[<a href=\'%s\'>%s</a>%s]</%s>\n' % (
+            text_tag, self.text, url, "Original", attrib, text_tag
+        )
+        return head + body + '\n'
 
 
 class TwitterApi:
@@ -167,15 +169,11 @@ class Week:
         ), key=operator.attrgetter('time'))
         self.sunday = sunday
 
-    def entry(self):
-        e = ["Die Kurzmeldungen letzter Woche", '']
-        _e = e.append
-
-        _e('<dl class=\'tweet\'>')
+    def entry(self, f):
+        f.write("Die Kurzmeldungen letzter Woche\n\n" '<dl class=\'tweet\'>\n')
         for tweet in self.tweets:
-            tweet.as_html('dt', 'dd', _e)
-        _e('</dl>')
-        return '\n'.join(e) + '\n'
+            f.write(tweet.as_html('dt', 'dd'))
+        f.write('</dl>\n')
 
     def write(self):
         if not self.tweets:  # no tweets in this week
@@ -186,7 +184,7 @@ class Week:
             os.makedirs(path)
         path = os.path.join(path, sun.strftime('short-%Y-%m-%d.txt'))
         with codecs.open(path, 'w', encoding) as f:
-            f.write(self.entry())
+            self.entry(f)
         mtime = time.mktime(sun.timetuple())
         os.utime(path, (mtime, mtime))
         print("Wrote", path)
