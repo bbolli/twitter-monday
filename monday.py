@@ -192,15 +192,17 @@ class Week:
 
 
 def all_weeks(mid_weeks):
+    if not mid_weeks:
+        return 0
     # set(...) removes duplicate dates
     sundays = sorted(set(sunday_after(d) for d in mid_weeks))
-    earliest = sundays[0] - ONE_WEEK
+    earliest = sundays[0]
     twitter = TwitterApi()
     count = 0
     for sunday, tweets in itertools.groupby(twitter.get_tweets(),
         key=lambda t: sunday_after(Tweet.created(t))
     ):
-        if sunday <= earliest:
+        if sunday < earliest:
             break
         if sunday in sundays:
             count += Week(sunday, tweets).write()
@@ -225,10 +227,8 @@ if __name__ == '__main__':
                 print("Ignoring unparseable argument '%s'" % a, file=sys.stderr)
 
     args = sys.argv[1:]
-    if args:
-        dates = parse_date_ranges(args)
-    else:
-        dates = [datetime.now() - ONE_WEEK]
+    dates = parse_date_ranges(args) if args else [datetime.now() - ONE_WEEK]
 
     count = all_weeks(dates)
+
     sys.exit(0 if count else 1)
