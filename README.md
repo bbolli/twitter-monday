@@ -22,13 +22,14 @@ saved.
 
 `python complete.py [-f] [-r] [screen_name]`
 
-`complete.py` creates a complete backup of your or `screen_name`'s tweets, as far as they are
-returned by the Twitter API.
+`complete.py` creates a complete backup of your or `screen_name`'s tweets, as
+far as they are returned by the Twitter API.
 
-The output is a file called `@<screen_name>.json`. It contains the tweets in their
-original JSON format.
+The output is a file called `@<screen_name>.json`. It contains the tweets in
+their original JSON format.
 
-Option `-f` returns the user's favorite tweets instead of their own.
+Option `-f` returns the user's favorite tweets instead of their own. In this
+case, the output file's name is `@<screen_name>-favs.json`.
 
 With option `-r`, shortened `t.co` URLs are expanded.
 

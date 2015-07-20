@@ -32,5 +32,6 @@ if options.resolve:
     for t in tweets:
         munge_text(t)
 
-with open('@%s.json' % api.screen_name, 'w') as f:
+fn = '@%s%s.json' % (api.screen_name, '-favs' if options.favorites else '')
+with open(fn, 'w') as f:
     json.dump(tweets, f, indent=2, sort_keys=True, separators=(',', ': '))
