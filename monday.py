@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 
-"""Run this during the week to write last week's short-form entry"""
+"""Run this at midnight to write the last day's short-form entry"""
 
 from __future__ import print_function
 
@@ -18,15 +18,20 @@ from twitter.api import Twitter
 from twitter.oauth import OAuth, read_token_file
 from twitter.oauth_dance import oauth_dance
 
+# Config
+POST_HEADER = "Die Kurzmeldungen des Tages\n\n" '<dl class=\'tweet\'>\n'
+POST_FOOTER = '</dl>\n'
+DATE_TAG = 'dt'
+TEXT_TAG = 'dd'
+TWEET_DATE_FMT = '%H:%M'
+IGNORE_SOURCES = ('tumblr', 'instagram')
+PERIOD_LENGTH = 1   # days
 
 # Registered by @swissbolli
 CONSUMER_KEY = '2fLClfUjnO720IiTSZXwxiQM6'
 CONSUMER_SECRET = 'uHLl38PJy1clObRCWHkjRy3nP3h0km7LLTXSiXMRF9ExBUjBVF'
 OAUTH_FILENAME = os.environ.get('HOME', os.environ.get('USERPROFILE', '.')) + \
     os.sep + '.twitter_monday_oauth'
-
-# ignore tweets originating from these sources
-IGNORE_SOURCES = ('tumblr', 'instagram')
 
 
 # ensure the right date/time format
@@ -37,20 +42,20 @@ except locale.Error:
 encoding = locale.getdefaultlocale()[1]
 time_encoding = locale.getlocale(locale.LC_TIME)[1] or encoding
 
-ONE_WEEK = timedelta(weeks=1)
+PERIOD = timedelta(days=PERIOD_LENGTH)
 
 
-def sunday_after(dt, offset=1):
-    """offset == 3 means 3rd Sunday from now, -2 means two Sundays back"""
+def period_end(dt, offset=1):
+    """offset == 3 means 3rd midnight from now, -2 means two periods back"""
     if offset == 0:
         raise ValueError("offset must be nonzero")
     if offset > 0:
         offset -= 1
-    dt += ONE_WEEK * offset
+    dt += PERIOD * offset
 
-    # 23:59:59 on next Sunday
-    s = dt + timedelta(days=6 - dt.weekday())
-    s = s.replace(hour=23, minute=59, second=59, microsecond=0)
+    if PERIOD_LENGTH == 7:
+        dt += timedelta(days=PERIOD_LENGTH - 1 - dt.weekday())
+    s = dt.replace(hour=23, minute=59, second=59, microsecond=0)
 
     # Watch out for DST transition
     # s -= s.gmtoff - t.gmtoff
@@ -105,9 +110,11 @@ class Tweet:
     def __repr__(self):
         return u'%(time)s %(text)r' % self.__dict__
 
-    def as_html(self, date_tag, text_tag):
+    def as_html(self):
         head = '<%s id=\'%s\'>%s</%s>\n' % (
-            date_tag, 'p-%s' % self.t_id, strftime(self.time, '%A, %H:%M'), date_tag,
+            DATE_TAG,
+            'p-%s' % self.t_id, strftime(self.time, TWEET_DATE_FMT),
+            DATE_TAG,
         )
         attrib = ''
         if self.reply_person:
@@ -117,7 +124,7 @@ class Tweet:
             attrib = "; Antwort an <a href='%s'>@%s</a>" % (who, self.reply_person)
         url = 'http://twitter.com/%s/status/%s' % (self.screen_name, self.t_id)
         body = '<%s>%s\n[<a href=\'%s\'>%s</a>%s]</%s>\n' % (
-            text_tag, self.text, url, "Original", attrib, text_tag
+            TEXT_TAG, self.text, url, "Original", attrib, TEXT_TAG
         )
         return head + body + '\n'
 
@@ -160,52 +167,50 @@ class TwitterApi:
                 kwargs['max_id'] = tweet['id'] - 1
 
 
-class Week:
+class TweetPeriod:
 
-    # Monday-to-Sunday week of tweets ending at sunday
-    def __init__(self, sunday, tweets):
+    # One period's worth of tweets
+    def __init__(self, end, tweets):
         self.tweets = sorted((
             Tweet(t) for t in tweets if not Tweet.ignore(t)
         ), key=operator.attrgetter('time'))
-        self.sunday = sunday
+        self.end = end
 
     def entry(self, f):
-        f.write("Die Kurzmeldungen letzter Woche\n\n" '<dl class=\'tweet\'>\n')
+        f.write(POST_HEADER)
         for tweet in self.tweets:
-            f.write(tweet.as_html('dt', 'dd'))
-        f.write('</dl>\n')
+            f.write(tweet.as_html())
+        f.write(POST_FOOTER)
 
     def write(self):
-        if not self.tweets:  # no tweets in this week
+        if not self.tweets:  # no tweets in this period
             return 0
-        sun = self.sunday
-        path = os.path.join('tweets', sun.strftime('%Y'))
+        path = os.path.join('tweets', self.end.strftime('%Y'))
         if not os.path.isdir(path):
             os.makedirs(path)
-        path = os.path.join(path, sun.strftime('short-%Y-%m-%d.txt'))
+        path = os.path.join(path, self.end.strftime('short-%Y-%m-%d.txt'))
         with codecs.open(path, 'w', encoding) as f:
             self.entry(f)
-        mtime = time.mktime(sun.timetuple())
+        mtime = time.mktime(self.end.timetuple())
         os.utime(path, (mtime, mtime))
         print("Wrote", path)
         return len(self.tweets)
 
 
-def all_weeks(mid_weeks):
-    if not mid_weeks:
-        return 0
+def all_periods(days):
     # set(...) removes duplicate dates
-    sundays = sorted(set(sunday_after(d) for d in mid_weeks))
-    earliest = sundays[0]
+    days = sorted(set(period_end(d) for d in days))
+    if not days:
+        return 0
     twitter = TwitterApi()
     count = 0
-    for sunday, tweets in itertools.groupby(twitter.get_tweets(),
-        key=lambda t: sunday_after(Tweet.created(t))
+    for end, tweets in itertools.groupby(twitter.get_tweets(),
+        key=lambda t: period_end(Tweet.created(t))
     ):
-        if sunday < earliest:
+        if end < days[0]:
             break
-        if sunday in sundays:
-            count += Week(sunday, tweets).write()
+        if end in days:
+            count += TweetPeriod(end, tweets).write()
     return count
 
 
@@ -222,13 +227,13 @@ if __name__ == '__main__':
             elif len(r) == 2:
                 while r[0] <= r[1]:
                     yield r[0]
-                    r[0] += ONE_WEEK
+                    r[0] += PERIOD
             else:
                 print("Ignoring unparseable argument '%s'" % a, file=sys.stderr)
 
     args = sys.argv[1:]
-    dates = parse_date_ranges(args) if args else [datetime.now() - ONE_WEEK]
+    dates = parse_date_ranges(args) if args else [period_end(datetime.now(), -1)]
 
-    count = all_weeks(dates)
+    count = all_periods(dates)
 
     sys.exit(0 if count else 1)
