@@ -19,10 +19,11 @@ from twitter.oauth import OAuth, read_token_file
 from twitter.oauth_dance import oauth_dance
 
 # Config
-POST_HEADER = "Die Kurzmeldungen des Tages\n\n" '<dl class=\'tweet\'>\n'
-POST_FOOTER = '</dl>\n'
-DATE_TAG = 'dt'
-TEXT_TAG = 'dd'
+POST_TITLE = "Die Kurzmeldungen des Tages"
+POST_HEADER = '<div class=\'tweets\'>\n'
+POST_FOOTER = '</div>\n'
+DATE_TAG = 'span'
+TEXT_TAG = 'span'
 TWEET_DATE_FMT = '%H:%M'
 IGNORE_SOURCES = ('tumblr', 'instagram')
 PERIOD_LENGTH = 1   # days
@@ -111,7 +112,7 @@ class Tweet:
         return u'%(time)s %(text)r' % self.__dict__
 
     def as_html(self):
-        head = '<%s id=\'%s\'>%s</%s>\n' % (
+        head = '<p class=\'tweet\'><%s id=\'%s\'>%s</%s>\n' % (
             DATE_TAG,
             'p-%s' % self.t_id, strftime(self.time, TWEET_DATE_FMT),
             DATE_TAG,
@@ -126,7 +127,7 @@ class Tweet:
         body = '<%s>%s\n[<a href=\'%s\'>%s</a>%s]</%s>\n' % (
             TEXT_TAG, self.text, url, "Original", attrib, TEXT_TAG
         )
-        return head + body + '\n'
+        return head + body + '</p>\n'
 
 
 class TwitterApi:
@@ -177,7 +178,7 @@ class TweetPeriod:
         self.end = end
 
     def entry(self, f):
-        f.write(POST_HEADER)
+        f.write(POST_TITLE + '\n\n' + POST_HEADER)
         for tweet in self.tweets:
             f.write(tweet.as_html())
         f.write(POST_FOOTER)
