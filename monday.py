@@ -19,7 +19,7 @@ from twitter.oauth import OAuth, read_token_file
 from twitter.oauth_dance import oauth_dance
 
 # Config
-POST_TITLE = "Die Kurzmeldungen des Tages"
+POST_TITLE = ""
 POST_HEADER = '<div class=\'tweets\'>\n'
 POST_FOOTER = '</div>\n'
 DATE_TAG = 'span'
