@@ -134,7 +134,7 @@ class TwitterApi:
 
     def __init__(self):
         """If the user is not authorized yet, do the OAuth dance and save the
-        credentials in her home folder for future incovations.
+        credentials in their home folder for future invocations.
         Then read the credentials and return the authorized Twitter API object."""
         if not os.path.exists(OAUTH_FILENAME):
             oauth_dance("@swissbolli's Monday Twitter Backup",
